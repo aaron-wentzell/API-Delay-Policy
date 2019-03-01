@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<policy xmlns="http://www.mulesoft.org/schema/mule/policy"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:spring="http://www.springframework.org/schema/beans"
+        xmlns:mule="http://www.mulesoft.org/schema/mule/core"
+        xmlns:mule-ss="http://www.mulesoft.org/schema/mule/spring-security"
+        xmlns:ss="http://www.springframework.org/schema/security"
+        xmlns:api-platform-gw="http://www.mulesoft.org/schema/mule/api-platform-gw"
+        xsi:schemaLocation="http://www.mulesoft.org/schema/mule/policy http://www.mulesoft.org/schema/mule/policy/current/mule-policy.xsd
+              http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+              http://www.mulesoft.org/schema/mule/spring-security http://www.mulesoft.org/schema/mule/spring-security/current/mule-spring-security.xsd
+              http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-current.xsd
+              http://www.mulesoft.org/schema/mule/api-platform-gw http://www.mulesoft.org/schema/mule/api-platform-gw/current/mule-api-platform-gw.xsd
+              http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+    
+
+    <pointcut>
+        <api-platform-gw:api-pointcut apiName="{{ apiName }}" apiVersion="{{ apiVersionName }}"/>
+    </pointcut>
+
+    <before>
+    	<mule:logger message="Before API Policy" level="DEBUG" />
+    	<mule:choice>
+    		<mule:when expression="#['DCUPROD'.equals('${env}') || 'DMOPROD'.equals('${env}') || 'PFMPROD'.equals('${env}')|| 'SHAREDPROD'.equals('${env}')]">
+    			<mule:logger message="Not executing Delay...in Production environment" level="DEBUG" />
+    		</mule:when>
+    		<mule:otherwise>
+    			<mule:processor ref="Api_Delay_Execute" />	
+    	 	</mule:otherwise>
+    	</mule:choice> 
+    </before>
+
+    <after>
+        <mule:logger message="After Delay Policy" level="DEBUG" /> 
+    </after>
+    
+    <mule:processor-chain name="Api_Delay_Execute">
+    	<mule:expression-component><![CDATA[
+	    	Thread.sleep( {{ timeout }} );
+	    ]]>
+		</mule:expression-component>
+    </mule:processor-chain>
+</policy>
